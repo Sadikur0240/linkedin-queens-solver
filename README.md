@@ -8,7 +8,7 @@ A Chrome extension that automatically solves the daily 'Queens' puzzle game on L
 
 ## Demo
 
-![Demo Animation - Extension solving LinkedIn Queens puzzle in real-time](demo-placeholder.gif)
+![Demo Animation - Extension solving LinkedIn Queens puzzle in real-time](assets/demo.gif)
 *Animated demonstration of the LinkedIn Queens Solver extension in action*
 
 ## 🤖 Tech Stack
