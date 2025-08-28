@@ -2,7 +2,7 @@
     "manifest_version": 3,
     "name": "LinkedIn Queens Solver",
     "version": "1.1.0",
-    "description": "Automatically solves LinkedIn Queens puzzles using an optimized backtracking algorithm with universal compatibility for both signed-in and signed-out users",
+    "description": "Automatically solves LinkedIn Queens puzzles with universal compatibility for signed-in and signed-out users",
     "permissions": [
         "activeTab",
         "scripting"
