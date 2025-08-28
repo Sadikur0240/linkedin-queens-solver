@@ -1,0 +1,44 @@
+{
+    "manifest_version": 3,
+    "name": "LinkedIn Queens Solver",
+    "version": "1.0.0",
+    "description": "Automatically solves LinkedIn Queens puzzles using an optimized backtracking algorithm",
+    "permissions": [
+        "activeTab",
+        "scripting"
+    ],
+    "host_permissions": [
+        "*://www.linkedin.com/games/queens/*"
+    ],
+    "background": {
+        "service_worker": "background.js"
+    },
+    "content_scripts": [
+        {
+            "matches": [
+                "*://www.linkedin.com/games/queens/*"
+            ],
+            "js": [
+                "content.js"
+            ],
+            "run_at": "document_end"
+        }
+    ],
+    "action": {
+        "default_popup": "popup.html",
+        "default_title": "LinkedIn Queens Solver",
+        "default_icon": {
+            "16": "icons/icon16.png",
+            "48": "icons/icon48.png",
+            "128": "icons/icon128.png"
+        }
+    },
+    "icons": {
+        "16": "icons/icon16.png",
+        "48": "icons/icon48.png",
+        "128": "icons/icon128.png"
+    },
+    "author": "Jason Xa",
+    "homepage_url": "https://github.com/XaJason/linkedin-queens-solver",
+    "minimum_chrome_version": "88"
+}
