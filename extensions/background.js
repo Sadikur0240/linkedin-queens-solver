@@ -1,246 +1,297 @@
-const linkedInBoard = [
-    // Row 1: 9 purple
-    [
-        { color: 1, state: 'empty' }, { color: 1, state: 'empty' }, { color: 1, state: 'empty' },
-        { color: 1, state: 'empty' }, { color: 1, state: 'empty' }, { color: 1, state: 'empty' },
-        { color: 1, state: 'empty' }, { color: 1, state: 'empty' }, { color: 1, state: 'empty' }
-    ],
-    // Row 2: 4 purple, 1 pink, 4 purple
-    [
-        { color: 1, state: 'empty' }, { color: 1, state: 'empty' }, { color: 1, state: 'empty' },
-        { color: 1, state: 'empty' }, { color: 2, state: 'empty' }, { color: 1, state: 'empty' },
-        { color: 1, state: 'empty' }, { color: 1, state: 'empty' }, { color: 1, state: 'empty' }
-    ],
-    // Row 3: 2 purple, 2 blue, 2 green, 3 purple
-    [
-        { color: 1, state: 'empty' }, { color: 1, state: 'empty' }, { color: 3, state: 'empty' },
-        { color: 3, state: 'empty' }, { color: 4, state: 'empty' }, { color: 4, state: 'empty' },
-        { color: 1, state: 'empty' }, { color: 1, state: 'empty' }, { color: 1, state: 'empty' }
-    ],
-    // Row 4: 1 purple, 2 blue, 2 grey, 2 green, 2 purple
-    [
-        { color: 1, state: 'empty' }, { color: 3, state: 'empty' }, { color: 3, state: 'empty' },
-        { color: 5, state: 'empty' }, { color: 5, state: 'empty' }, { color: 4, state: 'empty' },
-        { color: 4, state: 'empty' }, { color: 1, state: 'empty' }, { color: 1, state: 'empty' }
-    ],
-    // Row 5: 2 blue, 2 grey, 1 red, 1 yellow, 2 green, 1 purple
-    [
-        { color: 3, state: 'empty' }, { color: 3, state: 'empty' }, { color: 5, state: 'empty' },
-        { color: 5, state: 'empty' }, { color: 6, state: 'empty' }, { color: 7, state: 'empty' },
-        { color: 4, state: 'empty' }, { color: 4, state: 'empty' }, { color: 1, state: 'empty' }
-    ],
-    // Row 6: 1 blue, 3 grey, 1 red, 1 yellow, 3 green
-    [
-        { color: 3, state: 'empty' }, { color: 5, state: 'empty' }, { color: 5, state: 'empty' },
-        { color: 5, state: 'empty' }, { color: 6, state: 'empty' }, { color: 7, state: 'empty' },
-        { color: 4, state: 'empty' }, { color: 4, state: 'empty' }, { color: 4, state: 'empty' }
-    ],
-    // Row 7: 1 brown, 3 grey, 1 red, 4 yellow
-    [
-        { color: 8, state: 'empty' }, { color: 5, state: 'empty' }, { color: 5, state: 'empty' },
-        { color: 5, state: 'empty' }, { color: 6, state: 'empty' }, { color: 7, state: 'empty' },
-        { color: 7, state: 'empty' }, { color: 7, state: 'empty' }, { color: 7, state: 'empty' }
-    ],
-    // Row 8: 3 brown, 3 red, 2 orange, 1 yellow
-    [
-        { color: 8, state: 'empty' }, { color: 8, state: 'empty' }, { color: 8, state: 'empty' },
-        { color: 6, state: 'empty' }, { color: 6, state: 'empty' }, { color: 6, state: 'empty' },
-        { color: 9, state: 'empty' }, { color: 9, state: 'empty' }, { color: 7, state: 'empty' }
-    ],
-    // Row 9: 1 brown, 6 red, 2 orange
-    [
-        { color: 8, state: 'empty' }, { color: 6, state: 'empty' }, { color: 6, state: 'empty' },
-        { color: 6, state: 'empty' }, { color: 6, state: 'empty' }, { color: 6, state: 'empty' },
-        { color: 6, state: 'empty' }, { color: 9, state: 'empty' }, { color: 9, state: 'empty' }
-    ]
-];
+// Background script for LinkedIn Queens Solver Chrome Extension
+// Contains optimized N-Queens algorithm with O(1) conflict checking
 
 /**
- * Solves the LinkedIn Queens puzzle using a modified backtracking algorithm.
- * @param {object} board A 2D array of cell objects, e.g., [{color: 1, state: 'empty'}].
- * @returns {object|null} An array of queen coordinates {row, col} if a solution is found, otherwise null.
+ * Optimized N-Queens solver using auxiliary data structures for O(1) conflict checking
+ * @param {Object} boardData - Board data from content script
+ * @returns {Object} Solution result with queens positions or error
  */
-function solveLinkedInQueens(board) {
-    const n = board.length;
-    const solution = [];
-    let iterationCount = 0; // Counter for performance analysis
+function solveLinkedInQueens(boardData) {
+    const startTime = performance.now();
+    let iterations = 0;
     
-    // Auxiliary data structures for O(1) conflict checking
-    const occupiedRows = new Set();
-    const occupiedCols = new Set();
-    const occupiedColors = new Set();
-
-    /**
-     * The main recursive backtracking function.
-     * @param {number} row The current row to place a queen in.
-     * @returns {boolean} True if a solution is found from this state, false otherwise.
-     */
-    function backtrack(row) {
-        iterationCount++; // Increment counter on each backtrack call
-        // Base case: If we have successfully placed a queen in every row, a solution is found.
-        if (row === n) {
-            return true;
+    try {
+        // Validate input data
+        if (!boardData || typeof boardData !== 'object') {
+            throw new Error('Invalid board data');
         }
-
-        // Iterate through each column in the current row.
-        for (let col = 0; col < n; col++) {
-            // Check if it's safe to place a queen at board[row][col].
-            if (isSafe(board, row, col, n)) {
-                // Place the queen.
-                board[row][col].state = 'queen';
-                solution.push({ row, col });
-                
-                // Update auxiliary data structures
-                occupiedRows.add(row);
-                occupiedCols.add(col);
-                occupiedColors.add(board[row][col].color);
-
-                // Recur to place a queen in the next row.
-                if (backtrack(row + 1)) {
-                    return true; // Solution found, propagate success up the call stack.
-                }
-
-                // Backtrack: If the recursive call failed, remove the queen and try the next column.
-                board[row][col].state = 'empty';
-                solution.pop();
-                
-                // Update auxiliary data structures
-                occupiedRows.delete(row);
-                occupiedCols.delete(col);
-                occupiedColors.delete(board[row][col].color);
+        
+        const { size, rows, cols: boardCols, board, queens: preplacedQueens } = boardData;
+        
+        // Validate board dimensions
+        if (!size || size !== rows || size !== boardCols) {
+            throw new Error(`Invalid board dimensions: ${size}x${rows}x${boardCols}`);
+        }
+        
+        if (!board || !Array.isArray(board) || board.length !== size) {
+            throw new Error('Invalid board array');
+        }
+        
+        console.log(`🏰 LinkedIn Queens Solver: Starting ${size}x${size} puzzle`);
+        console.log(`Pre-placed queens: ${preplacedQueens ? preplacedQueens.length : 0}`);
+        
+        // Auxiliary data structures for O(1) conflict checking
+        const cols = new Set();           // Occupied columns
+        const diag1 = new Set();          // row - col diagonals (↗)  
+        const diag2 = new Set();          // row + col diagonals (↖)
+        const solution = [];              // Final queen positions
+        
+        // Add pre-placed queens to auxiliary sets
+        if (preplacedQueens && Array.isArray(preplacedQueens)) {
+            preplacedQueens.forEach(queen => {
+                const { row, col } = queen;
+                cols.add(col);
+                diag1.add(row - col);
+                diag2.add(row + col);
+                solution.push({ row, col, preplaced: true });
+            });
+        }
+        
+        /**
+         * Check if placing a queen at (row, col) is safe using O(1) auxiliary sets
+         * @param {number} row - Row position
+         * @param {number} col - Column position  
+         * @returns {boolean} True if safe to place queen
+         */
+        function isSafe(row, col) {
+            return !cols.has(col) && 
+                   !diag1.has(row - col) && 
+                   !diag2.has(row + col);
+        }
+        
+        /**
+         * Place a queen at (row, col) and update auxiliary sets
+         * @param {number} row - Row position
+         * @param {number} col - Column position
+         */
+        function placeQueen(row, col) {
+            cols.add(col);
+            diag1.add(row - col);
+            diag2.add(row + col);
+            solution.push({ row, col, preplaced: false });
+        }
+        
+        /**
+         * Remove a queen from (row, col) and update auxiliary sets
+         * @param {number} row - Row position  
+         * @param {number} col - Column position
+         */
+        function removeQueen(row, col) {
+            cols.delete(col);
+            diag1.delete(row - col);
+            diag2.delete(row + col);
+            solution.pop();
+        }
+        
+        /**
+         * Check if there's already a queen (pre-placed) at this position
+         * @param {number} row - Row position
+         * @param {number} col - Column position
+         * @returns {boolean} True if position has pre-placed queen
+         */
+        function hasPreplacedQueen(row, col) {
+            return preplacedQueens && preplacedQueens.some(q => q.row === row && q.col === col);
+        }
+        
+        /**
+         * Recursive backtracking function to solve N-Queens
+         * @param {number} row - Current row being processed
+         * @returns {boolean} True if solution found
+         */
+        function solveNQueens(row) {
+            iterations++;
+            
+            // Base case: all queens placed successfully
+            if (row >= size) {
+                return true;
             }
+            
+            // Skip rows that already have pre-placed queens
+            if (preplacedQueens && preplacedQueens.some(q => q.row === row)) {
+                return solveNQueens(row + 1);
+            }
+            
+            // Try placing a queen in each column of current row
+            for (let col = 0; col < size; col++) {
+                // Skip if position has pre-placed queen
+                if (hasPreplacedQueen(row, col)) {
+                    continue;
+                }
+                
+                // Skip if position is blocked by crosses
+                if (board[row] && board[row][col] === 'cross') {
+                    continue;
+                }
+                
+                // Check if it's safe to place queen here
+                if (isSafe(row, col)) {
+                    // Place the queen
+                    placeQueen(row, col);
+                    
+                    // Recursively solve for remaining rows
+                    if (solveNQueens(row + 1)) {
+                        return true;
+                    }
+                    
+                    // Backtrack: remove the queen
+                    removeQueen(row, col);
+                }
+            }
+            
+            return false;
         }
+        
+        // Solve the puzzle
+        const solvable = solveNQueens(0);
+        const endTime = performance.now();
+        const solvingTime = endTime - startTime;
+        
+        if (solvable) {
+            console.log(`✅ LinkedIn Queens: Solution found!`);
+            console.log(`⚡ Performance: ${solvingTime.toFixed(2)}ms, ${iterations} iterations`);
+            console.log(`👑 Queens placed: ${solution.length} (${solution.filter(q => !q.preplaced).length} new)`);
+            
+            return {
+                success: true,
+                solution: solution.map(q => ({ row: q.row, col: q.col })), // Clean format for content script
+                performance: {
+                    solvingTime: solvingTime,
+                    iterations: iterations,
+                    queensPlaced: solution.length,
+                    newQueens: solution.filter(q => !q.preplaced).length
+                },
+                boardData: {
+                    size: size,
+                    preplacedQueens: preplacedQueens ? preplacedQueens.length : 0
+                }
+            };
+        } else {
+            console.log(`❌ LinkedIn Queens: No solution exists for this configuration`);
+            return {
+                success: false,
+                error: 'No solution exists for the given board configuration',
+                performance: {
+                    solvingTime: solvingTime,
+                    iterations: iterations
+                }
+            };
+        }
+        
+    } catch (error) {
+        const endTime = performance.now();
+        const solvingTime = endTime - startTime;
+        
+        console.error('LinkedIn Queens: Solver error:', error.message);
+        return {
+            success: false,
+            error: error.message,
+            performance: {
+                solvingTime: solvingTime,
+                iterations: iterations
+            }
+        };
+    }
+}
 
-        // If no column in the current row leads to a solution, return false.
+/**
+ * Validates board data received from content script
+ * @param {Object} data - Board data to validate
+ * @returns {boolean} True if data is valid
+ */
+function validateBoardData(data) {
+    if (!data || typeof data !== 'object') {
         return false;
     }
-
-    /**
-     * Optimized function to check if it's safe to place a queen at a given position.
-     * Uses auxiliary data structures for O(1) conflict checking.
-     * @param {object} board The current board state.
-     * @param {number} row The row to check.
-     * @param {number} col The column to check.
-     * @param {number} n The size of the board.
-     * @returns {boolean} True if the position is safe, false otherwise.
-     */
-    function isSafe(board, row, col, n) {
-        const targetColor = board[row][col].color;
-
-        // 1. O(1) check for queen in the same row or column using Sets
-        if (occupiedRows.has(row) || occupiedCols.has(col)) {
+    
+    const { size, rows, cols, board } = data;
+    
+    // Check required properties
+    if (!size || !rows || !cols || !board) {
+        return false;
+    }
+    
+    // Check dimensions consistency
+    if (size !== rows || size !== cols) {
+        return false;
+    }
+    
+    // Check board array structure
+    if (!Array.isArray(board) || board.length !== size) {
+        return false;
+    }
+    
+    // Check each row
+    for (let i = 0; i < size; i++) {
+        if (!Array.isArray(board[i]) || board[i].length !== size) {
             return false;
         }
-        
-        // 2. O(1) check for queen in the same colored region using Set
-        if (occupiedColors.has(targetColor)) {
-            return false;
-        }
-
-        // 3. Check for adjacent queens (8-directional proximity check) - still O(1) since it's fixed 8 positions
-        const directions = [
-            [-1, -1], [-1, 0], [-1, 1],
-            [ 0, -1],          [ 0, 1],
-            [ 1, -1], [ 1, 0], [ 1, 1]
-        ];
-
-        for (const [dr, dc] of directions) {
-            const newRow = row + dr;
-            const newCol = col + dc;
-
-            if (newRow >= 0 && newRow < n && newCol >= 0 && newCol < n) {
-                if (board[newRow][newCol].state === 'queen') {
-                    return false;
-                }
-            }
-        }
-
-        // The position is safe.
-        return true;
     }
-
-    // Start the backtracking process from the first row (row = 0).
-    if (backtrack(0)) {
-        return { solution, iterationCount };
-    } else {
-        return { solution: null, iterationCount }; // Return iteration count even if no solution found
-    }
+    
+    return true;
 }
 
-// Test the LinkedIn Queens solver and display results in console
-function testLinkedInQueensSolver() {
-    console.log('=== LinkedIn Queens Solver ===');
-    console.log('Board size: 7x7');
+// Message listener for communication with content scripts
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    console.log('LinkedIn Queens Background: Message received:', request.action);
     
-    // Create a deep copy of the board for solving
-    const boardCopy = linkedInBoard.map(row => 
-        row.map(cell => ({ ...cell }))
-    );
-    
-    console.log('\nSolving LinkedIn Queens puzzle...');
-    const startTime = performance.now();
-    const result = solveLinkedInQueens(boardCopy);
-    const endTime = performance.now();
-    
-    const executionTime = (endTime - startTime).toFixed(2);
-    console.log(`\nExecution completed in ${executionTime} ms`);
-    console.log(`Total iterations (backtrack calls): ${result.iterationCount}`);
-    console.log(`Average time per iteration: ${(parseFloat(executionTime) / result.iterationCount).toFixed(4)} ms`);
-    
-    if (result.solution) {
-        console.log(`\n✅ Solution found!`);
-        console.log(`Number of queens placed: ${result.solution.length}`);
+    if (request.action === 'solvePuzzle') {
+        // Validate sender is from a LinkedIn Queens page
+        if (!sender.tab || !sender.tab.url.includes('linkedin.com/games/queens')) {
+            console.warn('LinkedIn Queens: Rejecting request from non-LinkedIn source:', sender.tab?.url);
+            sendResponse({
+                success: false,
+                error: 'Request must come from LinkedIn Queens page'
+            });
+            return;
+        }
         
-        console.log('\nQueen positions:');
-        result.solution.forEach((queen, index) => {
-            const colorName = getColorName(boardCopy[queen.row][queen.col].color);
-            console.log(`Queen ${index + 1}: Row ${queen.row + 1}, Column ${queen.col + 1} (${colorName})`);
+        // Validate board data
+        if (!validateBoardData(request.data)) {
+            console.error('LinkedIn Queens: Invalid board data received');
+            sendResponse({
+                success: false,
+                error: 'Invalid board data format'
+            });
+            return;
+        }
+        
+        console.log('LinkedIn Queens Background: Solving puzzle...', {
+            size: `${request.data.size}x${request.data.size}`,
+            preplacedQueens: request.data.queens?.length || 0,
+            url: sender.tab.url
         });
         
-        console.log('\nBoard visualization:');
-        console.log('Legend: Q = Queen, . = Empty');
-        for (let row = 0; row < boardCopy.length; row++) {
-            let rowString = '';
-            for (let col = 0; col < boardCopy[row].length; col++) {
-                if (boardCopy[row][col].state === 'queen') {
-                    rowString += 'Q ';
-                } else {
-                    rowString += '. ';
-                }
-            }
-            console.log(`Row ${row + 1}: ${rowString}`);
-        }
+        // Solve the puzzle
+        const result = solveLinkedInQueens(request.data);
         
-        console.log('\nColor-coded board visualization:');
-        for (let row = 0; row < linkedInBoard.length; row++) {
-            let rowString = '';
-            for (let col = 0; col < linkedInBoard[row].length; col++) {
-                const colorName = getColorName(linkedInBoard[row][col].color);
-                const isQueen = boardCopy[row][col].state === 'queen';
-                rowString += `${colorName.charAt(0).toUpperCase()}${isQueen ? 'Q' : '.'} `;
-            }
-            console.log(`Row ${row + 1}: ${rowString}`);
-        }
+        // Send response back to content script
+        sendResponse(result);
         
+        // Log result summary
+        if (result.success) {
+            console.log(`LinkedIn Queens Background: ✅ Solved in ${result.performance.solvingTime.toFixed(2)}ms`);
+        } else {
+            console.log(`LinkedIn Queens Background: ❌ Failed: ${result.error}`);
+        }
     } else {
-        console.log(`\n❌ No solution found.`);
-        console.log('The LinkedIn Queens puzzle may not have a valid solution with the current constraints.');
+        console.warn('LinkedIn Queens Background: Unknown action:', request.action);
+        sendResponse({
+            success: false,
+            error: 'Unknown action'
+        });
     }
-}
+    
+    // Return true to indicate we will send a response asynchronously
+    return true;
+});
 
-// Helper function to get color names
-function getColorName(colorNumber) {
-    const colorMap = {
-        1: 'purple',
-        2: 'grey',
-        3: 'green',
-        4: 'yellow',
-        5: 'blue',
-        6: 'red',
-        7: 'orange'
-    };
-    return colorMap[colorNumber] || 'unknown';
-}
+// Extension installation/startup logging
+chrome.runtime.onInstalled.addListener((details) => {
+    console.log('LinkedIn Queens Solver: Extension installed/updated', details.reason);
+});
 
-// Run the LinkedIn Queens solver test
-testLinkedInQueensSolver();
+chrome.runtime.onStartup.addListener(() => {
+    console.log('LinkedIn Queens Solver: Extension started');
+});
+
+console.log('LinkedIn Queens Solver: Background script loaded and ready');
