@@ -3,6 +3,12 @@
 *.pem
 web-ext-artifacts/
 extension.zip
+linkedin-queens-solver-*.zip
+
+# Release Artifacts
+releases/
+dist/
+build/
 
 # Development Files
 .DS_Store
@@ -10,8 +16,14 @@ Thumbs.db
 *.log
 .vscode/
 .idea/
+node_modules/
 
 # Environment & Security
 .env*
 private-key.pem
 manifest-backup.json
+
+# Temporary Files
+temp/
+tmp/
+.tmp/

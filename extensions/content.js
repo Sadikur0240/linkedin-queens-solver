@@ -1,7 +1,80 @@
 // Content script for LinkedIn Queens Solver
 // This script automatically extracts puzzle data from LinkedIn Queens game DOM and solves it
+// Supports both signed-in users (direct DOM) and signed-out users (iframe DOM)
 
 console.log('🚀 LinkedIn Queens Solver: Extension loaded');
+
+/**
+ * Detects the current execution context - main page or iframe
+ * @returns {Object} Context information
+ */
+function detectContext() {
+    const isInIframe = window !== window.top;
+    const isMainPage = window === window.top;
+    const currentUrl = window.location.href;
+    const isQueensMainPage = currentUrl.includes('linkedin.com/games/queens') && !currentUrl.includes('/desktop');
+    const isQueensIframe = currentUrl.includes('linkedin.com/games/view/queens/desktop');
+    
+    return {
+        isInIframe,
+        isMainPage,
+        currentUrl,
+        isQueensMainPage,
+        isQueensIframe,
+        context: isQueensIframe ? 'iframe' : (isQueensMainPage ? 'main' : 'other')
+    };
+}
+
+/**
+ * Handles main page with iframe scenario (signed-out users)
+ */
+function handleMainPageWithIframe() {
+    console.log('🔍 LinkedIn Queens: Main page context - checking for iframe...');
+    
+    // Wait for iframe to load
+    const checkForIframe = () => {
+        const iframe = document.querySelector('iframe[src*="games/view/queens/desktop"]');
+        if (iframe) {
+            console.log('✅ LinkedIn Queens: Found game iframe, game logic will execute in iframe context');
+            return true;
+        }
+        return false;
+    };
+    
+    // Check immediately and then periodically
+    if (!checkForIframe()) {
+        let attempts = 0;
+        const maxAttempts = 50;
+        
+        const intervalId = setInterval(() => {
+            attempts++;
+            if (checkForIframe() || attempts >= maxAttempts) {
+                clearInterval(intervalId);
+                if (attempts >= maxAttempts) {
+                    console.warn('⏰ LinkedIn Queens: Iframe not found after waiting');
+                }
+            }
+        }, 200);
+    }
+}
+
+/**
+ * Processes puzzle in iframe context (where the actual game DOM exists)
+ */
+async function processPuzzleInIframe() {
+    console.log('🎯 LinkedIn Queens: Iframe context - processing puzzle...');
+    
+    // Wait for the game board to be fully loaded
+    const boardFound = await waitForGameBoard();
+    
+    if (!boardFound) {
+        console.warn('⏰ LinkedIn Queens: Game board not found in iframe, solver timed out');
+        return;
+    }
+    
+    console.log('✅ LinkedIn Queens: Game board ready in iframe, solving puzzle...');
+    await processPuzzle();
+}
 
 // Base color mapping from LinkedIn Queens game (expandable for larger grids)
 const BASE_COLOR_MAP = {
@@ -176,7 +249,7 @@ function extractBoardState() {
 }
 
 /**
- * Sends board data to background script for solving
+ * Sends board data to background script for solving with iframe context awareness
  * @param {Object} boardData - The extracted board data
  */
 function sendToSolver(boardData) {
@@ -184,6 +257,12 @@ function sendToSolver(boardData) {
         console.error('❌ LinkedIn Queens: No board data available');
         return;
     }
+
+    // Add context information to board data
+    const context = detectContext();
+    boardData.context = context;
+    
+    console.log('📤 LinkedIn Queens: Sending puzzle data from', context.context, 'context');
 
     // Add timeout and error handling
     const sendTimeout = setTimeout(() => {
@@ -428,36 +507,49 @@ function waitForGameBoard(maxAttempts = 50, delay = 100) {
 }
 
 /**
- * Main initialization function - automatically executes when DOM is ready
+ * Main initialization function with iframe support - automatically executes when DOM is ready
  */
 async function initializeQueensSolver() {
-    // Check if we're on a LinkedIn Queens page
-    if (!window.location.href.includes('linkedin.com/games/queens')) {
+    const context = detectContext();
+    
+    console.log('🎯 LinkedIn Queens: Auto-solver activated in', context.context, 'context');
+    console.log('🔍 Context details:', {
+        currentUrl: context.currentUrl,
+        isInIframe: context.isInIframe,
+        isMainPage: context.isMainPage,
+        isQueensMainPage: context.isQueensMainPage,
+        isQueensIframe: context.isQueensIframe
+    });
+    
+    // Handle different contexts
+    if (context.isQueensMainPage) {
+        // Main page - check if we have direct game access or need to wait for iframe
+        const gameBoard = document.querySelector('#queens-grid');
+        if (gameBoard) {
+            console.log('✅ LinkedIn Queens: Direct game access (signed-in user)');
+            const cells = gameBoard.querySelectorAll('[data-cell-idx]');
+            if (cells && cells.length > 0) {
+                console.log('✅ LinkedIn Queens: Game board ready, solving puzzle...');
+                await processPuzzle();
+                return;
+            }
+        }
+        
+        // No direct game access, handle iframe scenario (signed-out user)
+        handleMainPageWithIframe();
+        return;
+        
+    } else if (context.isQueensIframe) {
+        // We're in the iframe - this is where the actual game runs for signed-out users
+        console.log('🎯 LinkedIn Queens: Iframe context detected - processing game...');
+        await processPuzzleInIframe();
+        return;
+        
+    } else {
+        // Not a Queens page context
+        console.log('ℹ️ LinkedIn Queens: Not on Queens page, extension idle');
         return;
     }
-    
-    console.log('🎯 LinkedIn Queens: Auto-solver activated');
-    
-    // First, try immediate detection (board might already be ready)
-    const gameBoard = document.querySelector('#queens-grid');
-    const cells = gameBoard?.querySelectorAll('[data-cell-idx]');
-    
-    if (gameBoard && cells && cells.length > 0) {
-        console.log('✅ LinkedIn Queens: Game board ready, solving puzzle...');
-        await processPuzzle();
-        return;
-    }
-    
-    // Wait for the game board to load
-    const boardFound = await waitForGameBoard();
-    
-    if (!boardFound) {
-        console.warn('⏰ LinkedIn Queens: Game board not found, solver timed out');
-        return;
-    }
-    
-    console.log('✅ LinkedIn Queens: Game board ready, solving puzzle...');
-    await processPuzzle();
 }
 
 /**
@@ -485,7 +577,7 @@ if (document.readyState === 'loading') {
     initializeQueensSolver();
 }
 
-// Handle SPA navigation - automatically re-execute when navigating to Queens pages
+// Handle SPA navigation with iframe context awareness - automatically re-execute when navigating to Queens pages
 let currentUrl = window.location.href;
 let navigationTimeout = null;
 
@@ -496,8 +588,13 @@ const observer = new MutationObserver(() => {
         
         console.log(`🔄 LinkedIn Queens: URL changed from ${oldUrl} to ${currentUrl}`);
         
-        if (currentUrl.includes('linkedin.com/games/queens')) {
-            console.log('🎯 LinkedIn Queens: Navigation detected to Queens page, auto-initializing...');
+        // Check if navigation is to any Queens-related page (main or iframe)
+        const isQueensRelated = currentUrl.includes('linkedin.com/games/queens') || 
+                               currentUrl.includes('linkedin.com/games/view/queens/desktop');
+        
+        if (isQueensRelated) {
+            const context = detectContext();
+            console.log('🎯 LinkedIn Queens: Navigation detected to Queens page in', context.context, 'context, auto-initializing...');
             
             // Clear any existing timeout to avoid multiple executions
             if (navigationTimeout) {
@@ -527,7 +624,8 @@ observer.observe(document, {
 // Additional listener for pushstate/popstate events (SPA navigation)
 window.addEventListener('popstate', () => {
     console.log('🔄 LinkedIn Queens: Popstate event detected');
-    if (window.location.href.includes('linkedin.com/games/queens')) {
+    const context = detectContext();
+    if (context.isQueensMainPage || context.isQueensIframe) {
         setTimeout(initializeQueensSolver, 200);
     }
 });
@@ -538,7 +636,8 @@ history.pushState = function(...args) {
     originalPushState.apply(history, args);
     console.log('🔄 LinkedIn Queens: PushState event detected');
     setTimeout(() => {
-        if (window.location.href.includes('linkedin.com/games/queens')) {
+        const context = detectContext();
+        if (context.isQueensMainPage || context.isQueensIframe) {
             initializeQueensSolver();
         }
     }, 200);

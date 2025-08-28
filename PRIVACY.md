@@ -1,7 +1,7 @@
 # Privacy Policy - LinkedIn Queens Solver
 
 **Effective Date:** August 27, 2025  
-**Last Updated:** August 27, 2025
+**Last Updated:** August 28, 2025
 
 ## Overview
 
