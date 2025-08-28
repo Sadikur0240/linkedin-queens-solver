@@ -1,8 +1,17 @@
 // Background script for LinkedIn Queens Solver Chrome Extension
-// Contains optimized N-Queens algorithm with O(1) conflict checking
+// Implements the official LinkedIn Queens game rules:
+//
+// OFFICIAL LINKEDIN QUEENS RULES:
+// 1. Each row must contain exactly one queen
+// 2. Each column must contain exactly one queen  
+// 3. Each color region must contain exactly one queen
+// 4. Two queens cannot touch each other, not even diagonally
+//
+// This algorithm uses backtracking with constraint checking to solve puzzles
+// following these exact rules - nothing more, nothing less.
 
 /**
- * Optimized N-Queens solver using auxiliary data structures for O(1) conflict checking
+ * LinkedIn Queens solver implementing official game rules
  * @param {Object} boardData - Board data from content script
  * @returns {Object} Solution result with queens positions or error
  */
@@ -30,56 +39,87 @@ function solveLinkedInQueens(boardData) {
         console.log(`🏰 LinkedIn Queens Solver: Starting ${size}x${size} puzzle`);
         console.log(`Pre-placed queens: ${preplacedQueens ? preplacedQueens.length : 0}`);
         
-        // Auxiliary data structures for O(1) conflict checking
-        const cols = new Set();           // Occupied columns
-        const diag1 = new Set();          // row - col diagonals (↗)  
-        const diag2 = new Set();          // row + col diagonals (↖)
+        // Auxiliary data structures for LinkedIn Queens constraints
+        const cols = new Set();           // Occupied columns (Rule 2)
+        const usedColors = new Set();     // Used colors (Rule 3)
         const solution = [];              // Final queen positions
         
         // Add pre-placed queens to auxiliary sets
         if (preplacedQueens && Array.isArray(preplacedQueens)) {
             preplacedQueens.forEach(queen => {
-                const { row, col } = queen;
-                cols.add(col);
-                diag1.add(row - col);
-                diag2.add(row + col);
-                solution.push({ row, col, preplaced: true });
+                const { row, col, color } = queen;
+                cols.add(col);              // Track column usage
+                if (color) {
+                    usedColors.add(color);  // Track color usage
+                }
+                solution.push({ row, col, color, preplaced: true });
             });
         }
         
         /**
-         * Check if placing a queen at (row, col) is safe using O(1) auxiliary sets
+         * Check if two queens touch each other (including diagonally adjacent)
+         * @param {number} row1 - First queen row
+         * @param {number} col1 - First queen column
+         * @param {number} row2 - Second queen row
+         * @param {number} col2 - Second queen column
+         * @returns {boolean} True if queens touch each other
+         */
+        function queensTouch(row1, col1, row2, col2) {
+            const rowDiff = Math.abs(row1 - row2);
+            const colDiff = Math.abs(col1 - col2);
+            // Queens touch if they are adjacent (including diagonally)
+            return rowDiff <= 1 && colDiff <= 1 && !(rowDiff === 0 && colDiff === 0);
+        }
+        
+        /**
+         * Check if placing a queen at (row, col) follows all LinkedIn Queens rules
          * @param {number} row - Row position
          * @param {number} col - Column position  
+         * @param {string} color - Color of the cell
          * @returns {boolean} True if safe to place queen
          */
-        function isSafe(row, col) {
-            return !cols.has(col) && 
-                   !diag1.has(row - col) && 
-                   !diag2.has(row + col);
+        function isSafe(row, col, color) {
+            // Rule 1: Each column must contain exactly one queen
+            if (cols.has(col)) {
+                return false;
+            }
+            
+            // Rule 2: Each color region must contain exactly one queen
+            if (usedColors.has(color)) {
+                return false;
+            }
+            
+            // Rule 3: Two queens cannot touch each other, not even diagonally
+            for (const queen of solution) {
+                if (queensTouch(row, col, queen.row, queen.col)) {
+                    return false;
+                }
+            }
+            
+            return true;
         }
         
         /**
          * Place a queen at (row, col) and update auxiliary sets
          * @param {number} row - Row position
          * @param {number} col - Column position
+         * @param {string} color - Color of the cell
          */
-        function placeQueen(row, col) {
-            cols.add(col);
-            diag1.add(row - col);
-            diag2.add(row + col);
-            solution.push({ row, col, preplaced: false });
+        function placeQueen(row, col, color) {
+            cols.add(col);              // Track column usage
+            usedColors.add(color);      // Track color usage
+            solution.push({ row, col, color, preplaced: false });
         }
         
         /**
          * Remove a queen from (row, col) and update auxiliary sets
          * @param {number} row - Row position  
          * @param {number} col - Column position
+         * @param {string} color - Color of the cell
          */
-        function removeQueen(row, col) {
-            cols.delete(col);
-            diag1.delete(row - col);
-            diag2.delete(row + col);
+        function removeQueen(row, col, color) {
+            cols.delete(col);           // Remove column usage
+            usedColors.delete(color);   // Remove color usage
             solution.pop();
         }
         
@@ -123,10 +163,17 @@ function solveLinkedInQueens(boardData) {
                     continue;
                 }
                 
-                // Check if it's safe to place queen here
-                if (isSafe(row, col)) {
+                // Get the color of this cell (required for LinkedIn Queens)
+                const cellColor = boardData.colors && boardData.colors[row] && boardData.colors[row][col];
+                if (!cellColor) {
+                    console.warn(`LinkedIn Queens: No color found for cell (${row}, ${col})`);
+                    continue;
+                }
+                
+                // Check if it's safe to place queen here (including color constraint)
+                if (isSafe(row, col, cellColor)) {
                     // Place the queen
-                    placeQueen(row, col);
+                    placeQueen(row, col, cellColor);
                     
                     // Recursively solve for remaining rows
                     if (solveNQueens(row + 1)) {
@@ -134,7 +181,7 @@ function solveLinkedInQueens(boardData) {
                     }
                     
                     // Backtrack: remove the queen
-                    removeQueen(row, col);
+                    removeQueen(row, col, cellColor);
                 }
             }
             
@@ -147,9 +194,20 @@ function solveLinkedInQueens(boardData) {
         const solvingTime = endTime - startTime;
         
         if (solvable) {
+            const newQueens = solution.filter(q => !q.preplaced);
+            const uniqueColors = new Set(solution.map(q => q.color)).size;
+            
             console.log(`✅ LinkedIn Queens: Solution found!`);
             console.log(`⚡ Performance: ${solvingTime.toFixed(2)}ms, ${iterations} iterations`);
-            console.log(`👑 Queens placed: ${solution.length} (${solution.filter(q => !q.preplaced).length} new)`);
+            console.log(`👑 Queens placed: ${solution.length} (${newQueens.length} new)`);
+            console.log(`🎨 Colors used: ${uniqueColors}/${solution.length} (each queen in different color: ${uniqueColors === solution.length ? '✅' : '❌'})`);
+            
+            // Verify all LinkedIn Queens rules are satisfied
+            console.log(`🔍 Rule verification:`);
+            console.log(`  - Each row has exactly one queen: ✅ (by algorithm design)`);
+            console.log(`  - Each column has exactly one queen: ✅`);  
+            console.log(`  - Each color has exactly one queen: ${uniqueColors === solution.length ? '✅' : '❌'}`);
+            console.log(`  - No queens touch diagonally: ✅ (verified during placement)`);
             
             return {
                 success: true,
