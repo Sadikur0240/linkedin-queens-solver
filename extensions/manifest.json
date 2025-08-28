@@ -8,7 +8,7 @@
         "scripting"
     ],
     "host_permissions": [
-        "*://www.linkedin.com/games/queens/*"
+        "*://www.linkedin.com/games/*"
     ],
     "background": {
         "service_worker": "background.js"
@@ -16,7 +16,7 @@
     "content_scripts": [
         {
             "matches": [
-                "*://www.linkedin.com/games/queens/*"
+                "*://www.linkedin.com/games/*"
             ],
             "js": [
                 "content.js"

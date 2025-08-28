@@ -316,9 +316,9 @@ function highlightSolutionOnPage(solution, boardData) {
     const gameBoard = document.querySelector('#queens-grid');
     if (!gameBoard) return;
     
-    console.log('🎨 LinkedIn Queens: Applying permanent solution highlighting to game board...');
+    console.log('🎨 LinkedIn Queens: Applying subtle border highlighting to game board...');
     
-    // Add permanent visual indicators for all queen positions
+    // Add subtle visual indicators for all queen positions
     solution.forEach(queen => {
         const cellIdx = queen.row * boardData.size + queen.col;
         const cell = gameBoard.querySelector(`[data-cell-idx="${cellIdx}"]`);
@@ -326,17 +326,15 @@ function highlightSolutionOnPage(solution, boardData) {
             const isExisting = boardData.queens.some(q => q.row === queen.row && q.col === queen.col);
             
             if (isExisting) {
-                // Highlight existing queens with blue border (already placed)
-                cell.style.boxShadow = '0 0 8px 2px #4A90E2';
+                // Subtle blue border for existing queens (already placed)
                 cell.style.border = '3px solid #4A90E2';
-                cell.style.backgroundColor = 'rgba(74, 144, 226, 0.1)';
+                cell.style.borderRadius = '4px';
             } else {
-                // Highlight new queen positions with golden glow (where to place)
-                cell.style.boxShadow = '0 0 12px 3px #FFD700';
+                // Subtle golden border for new queen positions (where to place)
                 cell.style.border = '3px solid #FFD700';
-                cell.style.backgroundColor = 'rgba(255, 215, 0, 0.15)';
+                cell.style.borderRadius = '4px';
                 
-                // Add a subtle queen icon or marker for new positions
+                // Add a subtle queen icon marker for new positions
                 const marker = document.createElement('div');
                 marker.style.cssText = `
                     position: absolute;
@@ -354,25 +352,27 @@ function highlightSolutionOnPage(solution, boardData) {
                     font-weight: bold;
                     z-index: 1000;
                     pointer-events: none;
+                    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
                 `;
                 marker.textContent = '♕';
                 
                 // Ensure cell has relative positioning for absolute marker
-                cell.style.position = 'relative';
+                if (getComputedStyle(cell).position === 'static') {
+                    cell.style.position = 'relative';
+                }
                 cell.appendChild(marker);
             }
             
-            // Make highlighting more prominent with transition
-            cell.style.transition = 'all 0.3s ease-in-out';
-            cell.style.transform = 'scale(1.02)';
+            // Smooth transition for visual feedback
+            cell.style.transition = 'border 0.3s ease-in-out';
         }
     });
     
     // Add a success message to the page
     addSolutionMessage(solution.length, boardData.queens.length);
     
-    console.log('✨ LinkedIn Queens: Permanent solution highlighting applied!');
-    console.log(`🎯 Golden highlights show ${solution.length - boardData.queens.length} positions where you need to place queens`);
+    console.log('✨ LinkedIn Queens: Subtle border highlighting applied!');
+    console.log(`🎯 Golden borders with crown icons show ${solution.length - boardData.queens.length} positions where you need to place queens`);
 }
 
 /**
@@ -434,7 +434,7 @@ function addSolutionMessage(totalQueens, existingQueens) {
  * @param {number} delay - Delay between attempts in milliseconds
  * @returns {Promise<boolean>} True if board is found, false if timeout
  */
-function waitForGameBoard(maxAttempts = 30, delay = 500) {
+function waitForGameBoard(maxAttempts = 50, delay = 100) {
     return new Promise((resolve) => {
         let attempts = 0;
         
@@ -458,7 +458,7 @@ function waitForGameBoard(maxAttempts = 30, delay = 500) {
                 return;
             }
             
-            if (attempts % 5 === 0) {
+            if (attempts % 10 === 0) {
                 console.log(`🔍 LinkedIn Queens: Still looking for game board... (attempt ${attempts}/${maxAttempts})`);
             }
             
@@ -483,6 +483,17 @@ async function initializeQueensSolver() {
     
     console.log('🎯 LinkedIn Queens: Detected Queens game page, starting automatic solver...');
     
+    // First, try immediate detection (board might already be ready)
+    const gameBoard = document.querySelector('#queens-grid');
+    const cells = gameBoard?.querySelectorAll('[data-cell-idx]');
+    
+    if (gameBoard && cells && cells.length > 0) {
+        console.log('✅ LinkedIn Queens: Game board already ready, proceeding immediately...');
+        await processPuzzle();
+        return;
+    }
+    
+    console.log('⏳ LinkedIn Queens: Waiting for game board to load...');
     // Wait for the game board to load
     const boardFound = await waitForGameBoard();
     
@@ -491,18 +502,26 @@ async function initializeQueensSolver() {
         return;
     }
     
-    console.log('✅ LinkedIn Queens: Game board detected, extracting puzzle data...');
+    console.log('✅ LinkedIn Queens: Game board detected, processing puzzle...');
+    await processPuzzle();
+}
+
+/**
+ * Processes the puzzle once the board is ready
+ */
+async function processPuzzle() {
+    console.log('📊 LinkedIn Queens: Extracting puzzle data...');
     
-    // Extract board data automatically
+    // Extract board data
     const boardData = extractBoardState();
     if (!boardData) {
         console.error('❌ LinkedIn Queens: Failed to extract board data');
         return;
     }
     
-    console.log('📊 LinkedIn Queens: Board data extracted successfully, sending to solver...');
+    console.log('� LinkedIn Queens: Sending to solver...');
     
-    // Automatically send to solver
+    // Send to solver immediately
     sendToSolver(boardData);
 }
 
@@ -516,15 +535,59 @@ if (document.readyState === 'loading') {
 
 // Handle SPA navigation - automatically re-execute when navigating to Queens pages
 let currentUrl = window.location.href;
+let navigationTimeout = null;
+
 const observer = new MutationObserver(() => {
     if (window.location.href !== currentUrl) {
+        const oldUrl = currentUrl;
         currentUrl = window.location.href;
+        
+        console.log(`🔄 LinkedIn Queens: URL changed from ${oldUrl} to ${currentUrl}`);
+        
         if (currentUrl.includes('linkedin.com/games/queens')) {
-            console.log('🔄 LinkedIn Queens: Navigation detected to Queens page, auto-initializing...');
-            // Give time for new content to load, then automatically process
-            setTimeout(initializeQueensSolver, 1500);
+            console.log('🎯 LinkedIn Queens: Navigation detected to Queens page, auto-initializing...');
+            
+            // Clear any existing timeout to avoid multiple executions
+            if (navigationTimeout) {
+                clearTimeout(navigationTimeout);
+            }
+            
+            // Use a shorter delay for SPA navigation, but also try immediate execution
+            navigationTimeout = setTimeout(() => {
+                initializeQueensSolver();
+            }, 300);
+            
+            // Also try immediate execution in case content is already ready
+            setTimeout(() => {
+                initializeQueensSolver();
+            }, 50);
         }
     }
 });
 
-observer.observe(document, { childList: true, subtree: true });
+observer.observe(document, { 
+    childList: true, 
+    subtree: true,
+    attributes: true,
+    attributeFilter: ['href']
+});
+
+// Additional listener for pushstate/popstate events (SPA navigation)
+window.addEventListener('popstate', () => {
+    console.log('🔄 LinkedIn Queens: Popstate event detected');
+    if (window.location.href.includes('linkedin.com/games/queens')) {
+        setTimeout(initializeQueensSolver, 200);
+    }
+});
+
+// Listen for pushstate events (when LinkedIn changes URL programmatically)
+const originalPushState = history.pushState;
+history.pushState = function(...args) {
+    originalPushState.apply(history, args);
+    console.log('🔄 LinkedIn Queens: PushState event detected');
+    setTimeout(() => {
+        if (window.location.href.includes('linkedin.com/games/queens')) {
+            initializeQueensSolver();
+        }
+    }, 200);
+};
