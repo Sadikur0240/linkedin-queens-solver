@@ -14,8 +14,6 @@
 - extensions/manifest.json (v1.1.0)
 - extensions/content.js (with iframe support)
 - extensions/background.js (stable solver algorithm)
-- extensions/popup.html
-- extensions/popup.js
 - extensions/icons/ (all icon files)
 - README.md
 - LICENSE

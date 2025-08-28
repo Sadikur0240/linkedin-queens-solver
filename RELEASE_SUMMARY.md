@@ -46,7 +46,6 @@ linkedin-queens-solver/
 │   ├── manifest.json (v1.1.0)
 │   ├── content.js (iframe support)
 │   ├── background.js (stable algorithm)
-│   ├── popup.html & popup.js
 │   └── icons/ (16px, 48px, 128px)
 ├── .github/workflows/release.yml
 ├── CHANGELOG.md ⭐ NEW
