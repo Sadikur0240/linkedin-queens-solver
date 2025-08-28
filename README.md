@@ -1,177 +1,54 @@
-# 🏰 LinkedIn Queens Solver
+# LinkedIn Queens Solver
 
-A high-performance Chrome extension that automatically solves LinkedIn Queens puzzles using an optimized backtracking algorithm with O(1) conflict checking.
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![Language](https://img.shields.io/badge/language-JavaScript-yellow.svg)
+![Status](https://img.shields.io/badge/status-Complete-brightgreen.svg)
 
-## ⚡ Features
+A Chrome extension that automatically solves the daily 'Queens' puzzle game on LinkedIn. It uses a modified backtracking algorithm to handle the game's unique constraints, including colored regions and queen adjacency rules, providing instant solutions with visual guidance directly on the LinkedIn game page.
 
-- **Blazing Fast**: Solves 9x9 boards in under 1ms with ~49 iterations (vs 1000s with basic algorithms)
-- **Auto-Detection**: Automatically detects and parses LinkedIn Queens game pages
-- **Visual Solutions**: Console output with board visualization and detailed queen positions
-- **Color Recognition**: Supports all LinkedIn color schemes (Lavender, Peach Orange, Soft Blue, Pastel Green, etc.)
-- **Pre-placed Queens**: Handles existing queens from LinkedIn puzzles seamlessly
-- **Security-First**: Limited permissions, only works on LinkedIn Queens pages
+## Demo
 
-## 🚀 Quick Start
+![Demo Animation - Extension solving LinkedIn Queens puzzle in real-time](demo-placeholder.gif)
+*Animated demonstration of the LinkedIn Queens Solver extension in action*
 
-1. **Clone Repository:**
+## 🤖 Tech Stack
+
+- **JavaScript (ES6+)** - Core logic and algorithm implementation
+- **Chrome Extension APIs (Manifest V3)** - Modern extension framework with enhanced security
+- **HTML5** - Extension popup interface structure
+- **CSS3** - Visual styling and highlighting effects
+- **DOM Manipulation** - Real-time LinkedIn page interaction and solution visualization
+
+## ✨ Features
+
+- **Automated Board Parsing** - Automatically detects and extracts LinkedIn Queens game state via sophisticated DOM analysis
+- **Custom Backtracking Algorithm** - Implements optimized solving algorithm respecting LinkedIn's unique rules (color regions, adjacency constraints)
+- **Dynamic Solution Visualization** - Injects subtle visual highlights and crown icons directly onto the live game board
+- **Instant Performance** - Solves 9x9 puzzles in under 1ms with ~49 iterations using O(1) conflict checking
+- **SPA Navigation Support** - Seamlessly works across LinkedIn's single-page application routing
+- **User-Friendly Interface** - Clean browser action popup with solution status and performance metrics
+
+## ⚙️ Installation and Usage
+
+1. **Clone the repository:**
    ```bash
-   git clone https://github.com/yourusername/linkedin-queens-solver.git
-   cd linkedin-queens-solver
+   git clone https://github.com/XaJason/linkedin-queens-solver.git
    ```
 
-2. **Install Chrome Extension:**
-   - Open Chrome and go to `chrome://extensions/`
-   - Enable "Developer mode" (top-right toggle)
-   - Click "Load unpacked" and select the `extensions` folder
+2. **Open Google Chrome and navigate to `chrome://extensions`**
 
-3. **Use on LinkedIn:**
-   - Navigate to any LinkedIn Queens game (`linkedin.com/games/queens/`)
-   - Open Chrome DevTools (F12) → Console tab
-   - Watch for automatic solution output with visual board representation
+3. **Enable "Developer mode" using the toggle in the top right corner**
 
-## 🧠 Algorithm Details
+4. **Click the "Load unpacked" button**
 
-### Optimized N-Queens Solver
-- **Time Complexity**: O(N!) worst case, but highly optimized with auxiliary data structures
-- **Space Complexity**: O(N) for auxiliary Sets
-- **Key Optimizations**:
-  - Auxiliary Sets for O(1) conflict checking (`cols`, `diag1`, `diag2`)
-  - Pre-placed queen handling for LinkedIn-specific puzzles
-  - Early pruning and intelligent backtracking
+5. **Select the `/extensions` directory from the cloned project folder**
 
-### Performance Metrics
-- **9x9 Board**: ~0.96ms solving time, 49 iterations
-- **7x7 Board**: ~0.3ms solving time, 28 iterations  
-- **Success Rate**: 100% for solvable LinkedIn Queens configurations
+6. **Navigate to a LinkedIn Queens puzzle page and the extension will automatically solve the puzzle, displaying solutions in the console and highlighting positions on the board**
 
-## 📁 Project Structure
+## 🏛️ Architectural Overview
 
-```
-linkedin-queens-solver/
-├── extensions/
-│   ├── manifest.json       # Chrome extension configuration
-│   ├── background.js       # Optimized N-Queens solver
-│   ├── content.js         # LinkedIn DOM parsing & integration
-│   ├── popup.html         # Extension popup interface
-│   ├── popup.js           # Popup functionality
-│   └── icons/             # Extension icons
-├── README.md              # This file
-├── README.html            # Visual installation guide
-└── .gitignore            # Git ignore rules
-```
+The extension follows Chrome's Manifest V3 architecture with three core components working in harmony. The **Content Script** (`content.js`) handles DOM parsing and visual feedback, automatically detecting LinkedIn Queens game boards and extracting puzzle state including grid dimensions, color mappings, and existing queen placements. The **Background Script** (`background.js`) serves as the computational engine, implementing the optimized backtracking algorithm with auxiliary data structures for O(1) conflict checking. The **Popup Script** (`popup.js`) provides user interface controls and status information. Communication between components uses Chrome's secure message passing protocol, ensuring efficient data flow while maintaining the extension's security boundaries and respecting LinkedIn's game integrity.
 
-## 🔧 Technical Implementation
+## 📜 License
 
-### DOM Parsing (`content.js`)
-- Detects `#queens-grid` game board container
-- Extracts dimensions from CSS custom properties (`--rows`, `--cols`)
-- Maps cell colors using `cell-color-*` CSS classes
-- Identifies queens and crosses using `cell-input--queen/cross` selectors
-- Handles LinkedIn's SPA navigation with mutation observers
-
-### Algorithm Core (`background.js`)
-```javascript
-// Auxiliary data structures for O(1) conflict checking
-const cols = new Set();       // Occupied columns
-const diag1 = new Set();      // row - col diagonals  
-const diag2 = new Set();      // row + col diagonals
-
-function isSafe(row, col) {
-    return !cols.has(col) && 
-           !diag1.has(row - col) && 
-           !diag2.has(row + col);
-}
-```
-
-### Security & Permissions
-- **Host Permissions**: Restricted to `*://www.linkedin.com/games/queens/*`
-- **API Access**: Only `activeTab` and `scripting` permissions
-- **Data Privacy**: No external requests, no data collection
-- **CSP Compliant**: Content Security Policy adherent
-
-## 🎮 Usage Examples
-
-### Console Output Example
-```
-🔷 LinkedIn Queens Solution 🔷
-Board Size: 9x9
-Queens to place: 9
-
-Visual Solution (Q=existing queens, ★=new queens):
-   1 2 3 4 5 6 7 8 9
- 1 · · · · · ★ · · ·
- 2 · · ★ · · · · · ·
- 3 · · · · · · · ★ ·
- 4 ★ · · · · · · · ·
- 5 · · · · ★ · · · ·
- 6 · · · · · · ★ · ·
- 7 · ★ · · · · · · ·
- 8 · · · · · · · · ★
- 9 · · · ★ · · · · ·
-
-Queen Positions:
-  1. Row 1, Col 6 - Soft Blue ★ (new)
-  2. Row 2, Col 3 - Peach Orange ★ (new)
-  3. Row 3, Col 8 - Lavender ★ (new)
-  ...
-```
-
-## 🛡️ Security Features
-
-- **Minimal Permissions**: Only requests necessary Chrome API access
-- **URL Restrictions**: Limited to LinkedIn Queens game pages only
-- **No External Requests**: Completely self-contained solving
-- **Local Processing**: All computation happens locally in browser
-- **Open Source**: Full code transparency and auditability
-
-## 🔍 Development & Debugging
-
-### Local Testing
-1. Load extension in Chrome Developer mode
-2. Navigate to LinkedIn Queens game
-3. Open DevTools → Console
-4. Look for "LinkedIn Queens Solver" messages
-5. Verify DOM parsing and solution output
-
-### Performance Monitoring
-The solver provides detailed performance metrics:
-- Iteration count
-- Solving time (milliseconds)
-- Board size and complexity
-- Pre-placed queens handling
-
-### Error Handling
-- Board validation and error reporting
-- Graceful fallbacks for unsupported configurations
-- Comprehensive console logging for debugging
-
-## 📊 Algorithm Comparison
-
-| Algorithm Type | Time Complexity | 9x9 Iterations | Solving Time |
-|---------------|----------------|----------------|--------------|
-| Basic Backtracking | O(N!) | ~2000-5000 | ~50-100ms |
-| **Our Optimized** | O(N!) | **~49** | **~0.96ms** |
-| Improvement Factor | Same | **40-100x** | **50-100x** |
-
-## 🤝 Contributing
-
-Contributions welcome! Please feel free to:
-- Report bugs or issues
-- Suggest new features  
-- Submit pull requests
-- Improve documentation
-- Add test cases
-
-## 📄 License
-
-This project is open source. Please check the LICENSE file for details.
-
-## ⚡ Performance Notes
-
-The algorithm is highly optimized for LinkedIn's specific Queens variant:
-- Handles pre-placed queens efficiently
-- Uses auxiliary data structures for instant conflict detection  
-- Minimizes backtracking through intelligent pruning
-- Provides sub-millisecond solving for typical LinkedIn puzzle sizes
-
-Built with ❤️ for LinkedIn Queens puzzle enthusiasts!
+Distributed under the MIT License. See [LICENSE](LICENSE) for more information.
