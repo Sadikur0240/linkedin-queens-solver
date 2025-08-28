@@ -10,6 +10,8 @@
 // This algorithm uses backtracking with constraint checking to solve puzzles
 // following these exact rules - nothing more, nothing less.
 
+console.log('🏰 LinkedIn Queens Solver: Background script ready');
+
 /**
  * LinkedIn Queens solver implementing official game rules
  * @param {Object} boardData - Board data from content script

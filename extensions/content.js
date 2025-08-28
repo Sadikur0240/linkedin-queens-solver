@@ -1,7 +1,7 @@
 // Content script for LinkedIn Queens Solver
 // This script automatically extracts puzzle data from LinkedIn Queens game DOM and solves it
 
-console.log('🚀 LinkedIn Queens Solver: Content script injected and starting...');
+console.log('🚀 LinkedIn Queens Solver: Extension loaded');
 
 // Base color mapping from LinkedIn Queens game (expandable for larger grids)
 const BASE_COLOR_MAP = {
@@ -181,48 +181,48 @@ function extractBoardState() {
  */
 function sendToSolver(boardData) {
     if (!boardData) {
-        console.error('❌ LinkedIn Queens: No board data to send to solver');
+        console.error('❌ LinkedIn Queens: No board data available');
         return;
     }
 
-    console.log('📤 LinkedIn Queens: Sending puzzle to background solver...', {
-        size: `${boardData.size}x${boardData.size}`,
-        preplacedQueens: boardData.queens.length,
-        totalColors: boardData.totalColors
-    });
+    // Add timeout and error handling
+    const sendTimeout = setTimeout(() => {
+        console.error('⏰ LinkedIn Queens: Communication timeout - try reloading the extension');
+    }, 5000);
 
-    // Send message to background script
-    chrome.runtime.sendMessage({
-        action: 'solvePuzzle',
-        data: boardData
-    }, (response) => {
-        if (chrome.runtime.lastError) {
-            console.error('❌ LinkedIn Queens: Failed to communicate with background script:', chrome.runtime.lastError);
-            return;
-        }
-
-        if (response && response.success) {
-            console.log('✅ LinkedIn Queens: Puzzle solved successfully!');
-            console.log('⚡ Performance:', {
-                solvingTime: `${response.performance.solvingTime.toFixed(2)}ms`,
-                iterations: response.performance.iterations,
-                queensPlaced: response.performance.queensPlaced,
-                newQueens: response.performance.newQueens
-            });
+    // Send message to background script with enhanced error handling
+    try {
+        chrome.runtime.sendMessage({
+            action: 'solvePuzzle',
+            data: boardData
+        }, (response) => {
+            clearTimeout(sendTimeout);
             
-            if (response.solution) {
-                displaySolution(response.solution, boardData);
+            if (chrome.runtime.lastError) {
+                console.error('❌ LinkedIn Queens: Communication failed -', chrome.runtime.lastError.message);
+                return;
             }
-        } else {
-            console.error('❌ LinkedIn Queens: Solver failed:', response?.error || 'Unknown error');
-            if (response?.performance) {
-                console.log('⚡ Failed attempt performance:', {
-                    solvingTime: `${response.performance.solvingTime.toFixed(2)}ms`,
-                    iterations: response.performance.iterations
-                });
+
+            if (response && response.success) {
+                console.log('✅ LinkedIn Queens: Puzzle solved in', `${response.performance.solvingTime.toFixed(2)}ms`);
+                
+                if (response.solution) {
+                    displaySolution(response.solution, boardData);
+                }
+            } else {
+                console.error('❌ LinkedIn Queens: Solver failed -', response?.error || 'Unknown error');
+                if (response?.performance) {
+                    console.log('⚡ Failed attempt performance:', {
+                        solvingTime: `${response.performance.solvingTime.toFixed(2)}ms`,
+                        iterations: response.performance.iterations
+                    });
+                }
             }
-        }
-    });
+        });
+    } catch (error) {
+        clearTimeout(sendTimeout);
+        console.error('❌ LinkedIn Queens: Extension communication error -', error.message);
+    }
 }
 
 /**
@@ -236,15 +236,8 @@ function displaySolution(solution, boardData) {
         return;
     }
 
-    console.log('');
-    console.log('🔷 ═══════════════════════════════════════');
-    console.log('🏆    LINKEDIN QUEENS SOLUTION FOUND    🏆');
-    console.log('🔷 ═══════════════════════════════════════');
-    console.log(`📊 Board Size: ${boardData.size}x${boardData.size}`);
-    console.log(`👑 Total Queens: ${solution.length}`);
-    console.log(`🔄 Pre-placed: ${boardData.queens.length}`);
-    console.log(`⭐ New Queens: ${solution.length - boardData.queens.length}`);
-    console.log('');
+    const newQueens = solution.length - boardData.queens.length;
+    console.log(`🏆 Solution found! Place ${newQueens} additional queens (marked in gold on the board)`);
     
     // Create visual board representation
     const visualBoard = Array(boardData.size).fill(null).map(() => Array(boardData.size).fill('·'));
@@ -261,11 +254,8 @@ function displaySolution(solution, boardData) {
         }
     });
 
-    // Print the visual board with better formatting
-    console.log('🎯 VISUAL SOLUTION:');
-    console.log('   Q = Existing Queens  |  ★ = New Queens  |  · = Empty');
-    console.log('');
-    
+    // Print the visual solution
+    console.log('Visual solution (Q=existing, ★=place here):');
     const colHeaders = '   ' + Array.from({length: boardData.size}, (_, i) => (i + 1).toString().padStart(2)).join('');
     console.log(colHeaders);
     console.log('  ' + '─'.repeat(boardData.size * 2 + 1));
@@ -275,35 +265,12 @@ function displaySolution(solution, boardData) {
         const rowDisplay = row.map(cell => cell.padStart(2)).join('');
         console.log(`${rowNum}│${rowDisplay}`);
     });
-    console.log('');
-
-    // List all queen positions with detailed information
-    console.log('📍 DETAILED QUEEN POSITIONS:');
-    console.log('   Row | Col | Color           | Status');
-    console.log('   ────┼─────┼─────────────────┼──────────');
     
-    solution.forEach((queen, index) => {
-        const color = boardData.colors[queen.row][queen.col] || 'Unknown';
-        const isExisting = boardData.queens.some(q => q.row === queen.row && q.col === queen.col);
-        const status = isExisting ? 'Existing' : 'NEW ⭐';
-        const marker = isExisting ? 'Q' : '★';
-        
-        console.log(`   ${(queen.row + 1).toString().padStart(3)} │ ${(queen.col + 1).toString().padStart(3)} │ ${color.padEnd(15)} │ ${status} ${marker}`);
-    });
-    
-    console.log('');
-    console.log('🔷 ═══════════════════════════════════════');
-    console.log('🎉 SOLUTION COMPLETE - PUZZLE SOLVED! 🎉');
-    console.log('🔷 ═══════════════════════════════════════');
-    console.log('');
-    
-    // Apply permanent highlighting to the actual LinkedIn game board
+    // Apply highlighting to the game board
     try {
         highlightSolutionOnPage(solution, boardData);
-        console.log('🎯 Check the game board above - golden highlights show where to place queens!');
     } catch (error) {
-        console.error('❌ Failed to highlight solution on page:', error);
-        console.log('💡 Tip: You can still use the console solution above to solve manually');
+        console.error('❌ Failed to highlight solution:', error.message);
     }
 }
 
@@ -370,9 +337,6 @@ function highlightSolutionOnPage(solution, boardData) {
     
     // Add a success message to the page
     addSolutionMessage(solution.length, boardData.queens.length);
-    
-    console.log('✨ LinkedIn Queens: Subtle border highlighting applied!');
-    console.log(`🎯 Golden borders with crown icons show ${solution.length - boardData.queens.length} positions where you need to place queens`);
 }
 
 /**
@@ -446,20 +410,14 @@ function waitForGameBoard(maxAttempts = 50, delay = 100) {
                 // Also check if the board has cells loaded
                 const cells = gameBoard.querySelectorAll('[data-cell-idx]');
                 if (cells.length > 0) {
-                    console.log(`✅ LinkedIn Queens: Game board found with ${cells.length} cells after ${attempts} attempts`);
                     resolve(true);
                     return;
                 }
             }
             
             if (attempts >= maxAttempts) {
-                console.warn(`⏰ LinkedIn Queens: Timeout waiting for game board after ${attempts} attempts (${attempts * delay / 1000}s)`);
                 resolve(false);
                 return;
-            }
-            
-            if (attempts % 10 === 0) {
-                console.log(`🔍 LinkedIn Queens: Still looking for game board... (attempt ${attempts}/${maxAttempts})`);
             }
             
             setTimeout(checkForBoard, delay);
@@ -473,36 +431,32 @@ function waitForGameBoard(maxAttempts = 50, delay = 100) {
  * Main initialization function - automatically executes when DOM is ready
  */
 async function initializeQueensSolver() {
-    console.log('🏰 LinkedIn Queens Solver: Content script loaded and initializing...');
-    
     // Check if we're on a LinkedIn Queens page
     if (!window.location.href.includes('linkedin.com/games/queens')) {
-        console.log('LinkedIn Queens: Not on Queens game page, script inactive');
         return;
     }
     
-    console.log('🎯 LinkedIn Queens: Detected Queens game page, starting automatic solver...');
+    console.log('🎯 LinkedIn Queens: Auto-solver activated');
     
     // First, try immediate detection (board might already be ready)
     const gameBoard = document.querySelector('#queens-grid');
     const cells = gameBoard?.querySelectorAll('[data-cell-idx]');
     
     if (gameBoard && cells && cells.length > 0) {
-        console.log('✅ LinkedIn Queens: Game board already ready, proceeding immediately...');
+        console.log('✅ LinkedIn Queens: Game board ready, solving puzzle...');
         await processPuzzle();
         return;
     }
     
-    console.log('⏳ LinkedIn Queens: Waiting for game board to load...');
     // Wait for the game board to load
     const boardFound = await waitForGameBoard();
     
     if (!boardFound) {
-        console.error('❌ LinkedIn Queens: Could not find game board after waiting, aborting');
+        console.warn('⏰ LinkedIn Queens: Game board not found, solver timed out');
         return;
     }
     
-    console.log('✅ LinkedIn Queens: Game board detected, processing puzzle...');
+    console.log('✅ LinkedIn Queens: Game board ready, solving puzzle...');
     await processPuzzle();
 }
 
@@ -510,8 +464,6 @@ async function initializeQueensSolver() {
  * Processes the puzzle once the board is ready
  */
 async function processPuzzle() {
-    console.log('📊 LinkedIn Queens: Extracting puzzle data...');
-    
     // Extract board data
     const boardData = extractBoardState();
     if (!boardData) {
