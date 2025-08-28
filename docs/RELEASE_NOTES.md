@@ -41,5 +41,5 @@ This release introduces comprehensive support for both signed-in and signed-out 
 
 ---
 
-**Full Changelog**: [CHANGELOG.md](https://github.com/XaJason/linkedin-queens-solver/blob/main/CHANGELOG.md)  
+**Full Changelog**: [CHANGELOG.md](https://github.com/XaJason/linkedin-queens-solver/blob/main/docs/CHANGELOG.md)  
 **Issues & Support**: [GitHub Issues](https://github.com/XaJason/linkedin-queens-solver/issues)

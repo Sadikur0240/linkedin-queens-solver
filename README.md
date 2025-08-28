@@ -79,13 +79,50 @@ The extension follows Chrome's Manifest V3 architecture with three core componen
 
 - **Popup Script** (`popup.js`) - Provides user interface controls and status information with context-aware feedback.
 
-### Universal Compatibility Architecture:
-
-The extension automatically detects LinkedIn's game loading strategy:
-- **Direct Mode (Signed-In)**: Game board exists directly on main page DOM
-- **Iframe Mode (Signed-Out)**: Game loads within `linkedin.com/games/view/queens/desktop` iframe
-
 Communication flows through Chrome's secure message passing protocol, with the content script intelligently adapting to either context while maintaining full functionality and respecting LinkedIn's security boundaries.
+
+### 🗂️ Repository Structure
+```
+linkedin-queens-solver/
+├── extensions/              # Chrome extension source code
+│   ├── manifest.json       # Extension configuration
+│   ├── background.js       # Puzzle solving algorithm  
+│   ├── content.js          # DOM interaction & UI
+│   └── icons/             # Extension icons (16px, 48px, 128px)
+├── docs/                   # Documentation
+│   ├── CHANGELOG.md       # Release history
+│   ├── PRIVACY.md         # Privacy policy
+│   ├── RELEASE_NOTES.md   # Latest release notes
+│   └── RELEASE_SUMMARY.md # Internal release documentation
+├── scripts/               # Build and utility scripts
+│   └── package.ps1       # Release packaging script
+├── assets/               # Images and media assets
+│   └── demo.gif         # Demo animation
+├── .github/             # GitHub configuration
+│   └── workflows/       # GitHub Actions
+├── CONTRIBUTING.md      # Contribution guidelines
+├── SECURITY.md         # Security policy
+└── README.md           # This file
+```
+
+## 🤝 Contributing
+
+We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details on:
+- Setting up the development environment
+- Coding standards and best practices  
+- Pull request process
+- Testing requirements
+
+## 🛡️ Security
+
+Security is important to us. Please review our [Security Policy](SECURITY.md) for:
+- Supported versions
+- Vulnerability reporting process
+- Security considerations
+
+## 📋 Changelog
+
+See [CHANGELOG.md](docs/CHANGELOG.md) for detailed release history and changes.
 
 ## 📜 License
 

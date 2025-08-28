@@ -1,6 +1,7 @@
 # Chrome Extension Build Artifacts
 *.crx
 *.pem
+*.key
 web-ext-artifacts/
 extension.zip
 linkedin-queens-solver-*.zip
@@ -9,21 +10,59 @@ linkedin-queens-solver-*.zip
 releases/
 dist/
 build/
+out/
 
 # Development Files
 .DS_Store
 Thumbs.db
 *.log
+*.tmp
 .vscode/
 .idea/
+*.swp
+*.swo
+*~
+
+# Node.js (if using build tools)
 node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
 
 # Environment & Security
 .env*
+.environment
 private-key.pem
 manifest-backup.json
+secrets.json
 
 # Temporary Files
 temp/
 tmp/
 .tmp/
+.temp/
+
+# OS Generated Files
+.DS_Store?
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Desktop.ini
+
+# IDE Files
+*.sublime-project
+*.sublime-workspace
+.project
+.metadata
+.classpath
+.settings/
+
+# Test Coverage
+coverage/
+.nyc_output/
+
+# Documentation builds
+docs/_build/
+site/

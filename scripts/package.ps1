@@ -10,6 +10,10 @@ $releaseFile = "${extensionName}-v${version}.zip"
 
 Write-Host "📦 Packaging LinkedIn Queens Solver v${version}" -ForegroundColor Green
 
+# Ensure we're in the root directory
+$rootDir = Split-Path -Parent $PSScriptRoot
+Set-Location $rootDir
+
 # Create temporary directory for packaging
 $tempDir = "temp_package"
 if (Test-Path $tempDir) {
