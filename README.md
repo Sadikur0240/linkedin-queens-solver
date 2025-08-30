@@ -105,6 +105,17 @@ linkedin-queens-solver/
 └── README.md           # This file
 ```
 
+## 🔐 Privacy & Permissions
+
+**Privacy-First Engineering:** This extension demonstrates professional development practices with minimal permission requirements and zero data collection.
+
+- **Host Permission Only:** Uses exclusively `*://www.linkedin.com/games/*` for targeted puzzle access
+- **No User Data Collection:** Operates entirely client-side with local processing
+- **Minimal Attack Surface:** Leverages content script architecture over programmatic injection
+- **Regulatory Compliance:** Adheres to Chrome Web Store Developer Program Policies
+
+**Technical Implementation:** Utilizes declarative content script injection rather than dynamic scripting permissions, demonstrating understanding of modern browser security models and Chrome extension best practices.
+
 ## 🤝 Contributing
 
 We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details on:

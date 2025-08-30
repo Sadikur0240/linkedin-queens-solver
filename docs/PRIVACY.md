@@ -1,7 +1,7 @@
 # Privacy Policy - LinkedIn Queens Solver
 
 **Effective Date:** August 27, 2025  
-**Last Updated:** August 28, 2025
+**Last Updated:** August 30, 2025
 
 ## Overview
 
@@ -30,11 +30,9 @@ All processing happens locally in your browser with no data leaving your device.
 
 ## Permissions Used
 
-- **activeTab**: Allows the extension to interact with the current LinkedIn Games page to provide puzzle solutions
-- **scripting**: Enables injection of content scripts to analyze game boards and display visual guidance
-- **host permission (*://www.linkedin.com/games/*)**: Restricts extension access only to LinkedIn Games pages
+- **Host Permission (*://www.linkedin.com/games/)**: Enables content script injection exclusively on LinkedIn Games pages to analyze puzzle boards and provide visual guidance
 
-These permissions are used solely for the puzzle-solving functionality and do not enable any data collection.
+This minimal permission follows the principle of least privilege, ensuring the extension only accesses content necessary for its puzzle-solving functionality without compromising user privacy.
 
 ## Third-Party Services
 
